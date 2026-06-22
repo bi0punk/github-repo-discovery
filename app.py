@@ -18,6 +18,8 @@ def es_repo_git(path: Path) -> bool:
 
 
 def obtener_remote_origin(path: Path) -> str:
+    if not path.is_dir():
+        return ""
     try:
         result = subprocess.run(
             ["git", "-C", str(path), "remote", "get-url", "origin"],
