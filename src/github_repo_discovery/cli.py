@@ -10,7 +10,8 @@ from urllib.parse import urlparse
 
 logger = logging.getLogger("repo-discovery")
 
-CRITICAL_PATHS: set[str] = {"/", "/etc", "/sys", "/proc", "/dev", "/boot", "/root", "/home", "/var", "/tmp"}
+CRITICAL_EXACT: set[str] = {"/", "/home", "/root", "/tmp"}
+CRITICAL_PREFIX: set[str] = {"/etc/", "/sys/", "/proc/", "/dev/", "/boot/", "/var/"}
 
 PLATFORM_DOMAINS: dict[str, str] = {
     "github.com": "github_repos",
@@ -117,8 +118,8 @@ def _warn_critical_path(base_dir: Path) -> bool:
     Returns True if safe to proceed, False if user aborts.
     """
     resolved = str(base_dir)
-    if resolved in CRITICAL_PATHS or any(
-        resolved.startswith(p + "/") for p in CRITICAL_PATHS if p != "/"
+    if resolved in CRITICAL_EXACT or any(
+        resolved.startswith(prefix) for prefix in CRITICAL_PREFIX
     ):
         logger.warning("The path '%s' looks like a critical system directory.", resolved)
         try:
