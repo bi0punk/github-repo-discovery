@@ -5,16 +5,22 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "github-repo-discovery"
 version = "1.0.0"
-description = "GitHub repository discovery tool"
+description = "Scan and organize Git repositories by hosting platform"
 requires-python = ">=3.11"
 dependencies = []
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0.0", "ruff>=0.6.0"]
+dev = ["pytest>=8.0.0", "pytest-cov>=5.0.0", "ruff>=0.6.0"]
+
+[project.scripts]
+github-repo-discovery = "github_repo_discovery.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["."]
+pythonpath = ["src"]
 
 [tool.ruff]
 line-length = 100

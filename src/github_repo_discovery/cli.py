@@ -1,16 +1,3 @@
-#!/usr/bin/env python3
-"""Detect and organize Git repositories by their remote hosting platform.
-
-Scans a base directory for Git repositories, detects which platform hosts
-their remote origin (GitHub, GitLab, Bitbucket), and moves them into
-platform-specific subdirectories.
-
-Usage:
-    python app.py /path/to/dir
-    python app.py /path/to/dir --dry-run
-    python app.py /path/to/dir --recursive
-"""
-
 from __future__ import annotations
 
 import argparse
@@ -303,7 +290,3 @@ def platform_folder_name(domain: str) -> str:
         "bitbucket.org": "bitbucket_repos",
     }
     return mapping.get(domain, f"{domain.replace('.', '_')}_repos")
-
-
-if __name__ == "__main__":
-    main()
