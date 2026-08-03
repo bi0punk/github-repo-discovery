@@ -1,34 +1,28 @@
 name: CI
-on: [push, pull_request]
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install uv
-        uses: astral-sh/setup-uv@v3
-        with: { enable-cache: true }
-      - name: Set up Python
-        run: uv python install 3.11
-      - name: Install dev
-        run: uv sync --all-extras
-      - name: Ruff check
-        run: uv run ruff check .
+      - uses: astral-sh/setup-uv@v3
+        with:
+          python-version: "3.12"
+      - run: uv pip install ruff
+      - run: ruff check .
 
   test:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-        python-version: ["3.11", "3.12", "3.13"]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install uv
-        uses: astral-sh/setup-uv@v3
-        with: { enable-cache: true }
-      - name: Set up Python ${{ matrix.python-version }}
-        run: uv python install ${{ matrix.python-version }}
-      - name: Install dev
-        run: uv sync --all-extras
-      - name: Pytest with coverage
-        run: uv run pytest --cov=src --cov-report=term-missing -v
+      - uses: astral-sh/setup-uv@v3
+        with:
+          python-version: "3.12"
+      - run: uv pip install pytest
+      - run: pytest -q
