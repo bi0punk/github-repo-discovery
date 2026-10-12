@@ -1,30 +1,93 @@
-# GitHub Repo Discovery
+# github-repo-discovery
 
-Scan directories for Git repositories, detect their hosting platform (GitHub, GitLab, Bitbucket), and organize them into platform-specific subdirectories.
+Escanea directorios en busca de repositorios Git, detecta su plataforma de hosting (GitHub, GitLab, Bitbucket) y los organiza en subdirectorios por plataforma.
 
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/Python-3.11+-blue)](https://python.org)
-[![CI](https://github.com/bi0punk/github-repo-discovery/actions/workflows/ci.yml/badge.svg)](https://github.com/bi0punk/github-repo-discovery/actions/workflows/ci.yml)
+[![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python)](https://python.org)
+[![CI](https://github.com/bi0punk/github-repo-discovery/actions/workflows/ci.yml/badge.svg)](https://github.com/bi0punk/github-repo-discovery/actions)
+[![Licencia](https://img.shields.io/badge/Licencia-MIT-blue)](LICENSE)
 
-## Features
+## Contenido
 
-- Recursive or top-level scanning for `.git` directories
-- Detects remote `origin` pointing to GitHub, GitLab, or Bitbucket
-- Proper URL parsing to avoid false positives (e.g. `notgithub.com`)
-- Moves repos to platform-specific folders: `github_repos/`, `gitlab_repos/`, `bitbucket_repos/`
-- `--dry-run` mode to preview changes without moving anything
-- Critical system path protection with confirmation prompt
-- Summary report with statistics per platform
-- Zero runtime dependencies (Python standard library only)
-- Installable as a CLI command via `pip install`
+- [Características](#características)
+- [Arquitectura](#arquitectura)
+- [Stack](#stack)
+- [Estructura del repositorio](#estructura-del-repositorio)
+- [Instalación](#instalación)
+- [Uso](#uso)
+- [Opciones](#opciones)
+- [Tests / CI](#tests--ci)
+- [Limitaciones](#limitaciones)
+- [Licencia](#licencia)
 
-## Installation
+## Características
+
+- Escaneo recursivo o de nivel superior buscando directorios `.git`
+- Detecta el remote `origin` apuntando a GitHub, GitLab o Bitbucket
+- Parseo correcto de URLs para evitar falsos positivos (p.ej. `notgithub.com`)
+- Mueve repos a carpetas por plataforma: `github_repos/`, `gitlab_repos/`, `bitbucket_repos/`
+- Modo `--dry-run` para previsualizar cambios sin mover nada
+- Protección de rutas críticas del sistema con prompt de confirmación
+- Reporte resumido con estadísticas por plataforma
+- Cero dependencias de runtime (solo librería estándar de Python)
+- Instalable como comando CLI vía `pip install`
+
+## Arquitectura
+
+```mermaid
+flowchart TD
+  DIR[Directorio base] --> SCAN[Escaneo de subdirectorios]
+  SCAN --> GIT{¿Tiene .git?}
+  GIT -->|no| SKIP[Se omite]
+  GIT -->|sí| REMOTE[git remote get-url origin]
+  REMOTE --> DET[detect_platform: parseo de URL]
+  DET -->|github.com| G1[github_repos/]
+  DET -->|gitlab.com| G2[gitlab_repos/]
+  DET -->|bitbucket.org| G3[bitbucket_repos/]
+  DET -->|otra| SKIP2[No clasificado - se omite]
+  G1 --> MOVE[move_repo]
+  G2 --> MOVE
+  G3 --> MOVE
+  MOVE --> SUM[Reporte resumido por plataforma]
+```
+
+## Stack
+
+| Componente | Tecnología |
+|---|---|
+| Lenguaje | Python 3.11+ (solo stdlib) |
+| CLI | argparse + entry point en `pyproject.toml` |
+| Detección | `git remote get-url origin` + `urllib.parse` |
+| Testing | pytest + pytest-cov |
+| CI | Ruff lint + pytest con cobertura |
+
+## Estructura del repositorio
+
+```
+github-repo-discovery/
+├── src/
+│   └── github_repo_discovery/
+│       ├── __init__.py
+│       ├── __main__.py
+│       └── cli.py              # CLI entry point y lógica central
+├── tests/
+│   └── test_app.py             # 41 unit tests
+├── .github/
+│   └── workflows/
+│       └── ci.yml              # CI: Ruff lint + pytest con cobertura
+├── pyproject.toml              # Config del proyecto, deps, entry points
+├── .python-version             # Python version pin
+├── .env.example
+├── LICENSE                     # MIT
+└── README.md
+```
+
+## Instalación
 
 ```bash
 pip install git+https://github.com/bi0punk/github-repo-discovery.git
 ```
 
-Or for development:
+O para desarrollo:
 
 ```bash
 git clone https://github.com/bi0punk/github-repo-discovery.git
@@ -32,28 +95,28 @@ cd github-repo-discovery
 uv sync --all-extras
 ```
 
-## Usage
+## Uso
 
 ```bash
 github-repo-discovery /path/to/scan
 
-# Dry-run: preview only, no changes
+# Dry-run: solo previsualiza, no mueve nada
 github-repo-discovery /path/to/scan --dry-run
 
-# Recursive scanning
+# Escaneo recursivo
 github-repo-discovery /path/to/scan --recursive
 
-# Specific platforms only
+# Solo plataformas específicas
 github-repo-discovery /path/to/scan --platforms github.com,gitlab.com
 
-# Verbose output
+# Salida verbose
 github-repo-discovery /path/to/scan -v
 
-# As a Python module
+# Como módulo de Python
 python -m github_repo_discovery /path/to/scan --dry-run
 ```
 
-### Example output
+### Ejemplo de salida
 
 ```
 INFO  [DIR] my-project
@@ -77,44 +140,19 @@ Repos moved: 5
 Base directory: /home/user/projects
 ```
 
-## Options
+## Opciones
 
-| Flag | Description |
+| Flag | Descripción |
 |---|---|
-| `--dry-run` | Report what would be moved without actually moving |
-| `--recursive` | Recurse into subdirectories (default: top-level only) |
-| `--platforms` | Comma-separated domains to detect (default: `github.com,gitlab.com,bitbucket.org`) |
-| `--verbose`, `-v` | Enable debug-level logging |
-| `--help`, `-h` | Show help |
+| `--dry-run` | Reporta lo que se movería sin mover nada |
+| `--recursive` | Recorre subdirectorios (default: solo nivel superior) |
+| `--platforms` | Dominios a detectar separados por coma (default: `github.com,gitlab.com,bitbucket.org`) |
+| `--verbose`, `-v` | Habilita logging de nivel debug |
+| `--help`, `-h` | Muestra ayuda |
 
-## Project Structure
+## Tests / CI
 
-```
-github-repo-discovery/
-├── src/
-│   └── github_repo_discovery/
-│       ├── __init__.py
-│       ├── __main__.py
-│       └── cli.py              # CLI entry point and core logic
-├── tests/
-│   └── test_app.py             # 41 unit tests
-├── .github/
-│   └── workflows/
-│       └── ci.yml              # CI: Ruff lint + pytest with coverage
-├── pyproject.toml              # Project config, deps, entry points
-├── .python-version             # Python version pin
-├── LICENSE                     # MIT
-└── README.md
-```
-
-## Requirements
-
-- Python >= 3.11
-- Git installed on the system
-
-No external Python dependencies required at runtime.
-
-## Tests
+CI: GitHub Actions ejecuta Ruff lint + pytest con cobertura en cada push/PR.
 
 ```bash
 uv sync --all-extras
@@ -122,13 +160,13 @@ uv run pytest -v
 uv run pytest --cov=src --cov-report=term-missing
 ```
 
-## Limitations
+## Limitaciones
 
-- Only scans remote `origin` (not other remotes)
-- Does not handle Git submodules
-- Does not preserve extended file attributes
-- Shell-like Git URLs (e.g. `git@github.com:user/repo.git`) are supported via SSH URL parsing
+- Solo escanea el remote `origin` (no otros remotes)
+- No maneja submódulos de Git
+- No preserva atributos extendidos de archivo
+- URLs de Git estilo shell (`git@github.com:user/repo.git`) se soportan vía parseo SSH
 
-## License
+## Licencia
 
-MIT
+MIT — ver [LICENSE](LICENSE).
