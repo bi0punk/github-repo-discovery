@@ -40,7 +40,9 @@ class TestGetRemoteOrigin:
         repo = tmp_path / "repo"
         repo.mkdir()
         with mock.patch("subprocess.run") as mock_run:
-            mock_run.return_value = mock.Mock(returncode=0, stdout="https://github.com/user/repo.git\n")
+            mock_run.return_value = mock.Mock(
+                returncode=0, stdout="https://github.com/user/repo.git\n"
+            )
             result = get_remote_origin(repo)
             assert result == "https://github.com/user/repo.git"
 

@@ -3,14 +3,14 @@ from __future__ import annotations
 import argparse
 import logging
 import shutil
-import subprocess
+import subprocess  # nosec B404
 import sys
 from pathlib import Path
 from urllib.parse import urlparse
 
 logger = logging.getLogger("repo-discovery")
 
-CRITICAL_EXACT: set[str] = {"/", "/home", "/root", "/tmp"}
+CRITICAL_EXACT: set[str] = {"/", "/home", "/root", "/tmp"}  # nosec B108
 CRITICAL_PREFIX: set[str] = {"/etc/", "/sys/", "/proc/", "/dev/", "/boot/", "/var/"}
 
 PLATFORM_DOMAINS: dict[str, str] = {
@@ -38,7 +38,7 @@ def get_remote_origin(path: Path) -> str:
     if not path.is_dir():
         return ""
     try:
-        result = subprocess.run(
+        result = subprocess.run(  # nosec B603, B607
             ["git", "-C", str(path), "remote", "get-url", "origin"],
             capture_output=True,
             text=True,
@@ -118,9 +118,7 @@ def _warn_critical_path(base_dir: Path) -> bool:
     Returns True if safe to proceed, False if user aborts.
     """
     resolved = str(base_dir)
-    if resolved in CRITICAL_EXACT or any(
-        resolved.startswith(prefix) for prefix in CRITICAL_PREFIX
-    ):
+    if resolved in CRITICAL_EXACT or any(resolved.startswith(prefix) for prefix in CRITICAL_PREFIX):
         logger.warning("The path '%s' looks like a critical system directory.", resolved)
         try:
             answer = input("Proceed anyway? [y/N] ").strip().lower()
@@ -262,13 +260,18 @@ def main(argv: list[str] | None = None) -> None:
             total_platform[platform] = total_platform.get(platform, 0) + 1
 
             if not args.dry_run:
-                dest = base_dir / domain_to_folder.get(platform, f"{platform.replace('.', '_')}_repos")
+                dest = base_dir / domain_to_folder.get(
+                    platform, f"{platform.replace('.', '_')}_repos"
+                )
                 dest.mkdir(exist_ok=True)
                 if move_repo(item, dest):
                     moved += 1
             else:
-                logger.info("  [DRY-RUN] Would move to: %s/%s",
-                            domain_to_folder.get(platform, f"{platform.replace('.', '_')}_repos"), item.name)
+                logger.info(
+                    "  [DRY-RUN] Would move to: %s/%s",
+                    domain_to_folder.get(platform, f"{platform.replace('.', '_')}_repos"),
+                    item.name,
+                )
                 moved += 1
 
     logger.info("")
